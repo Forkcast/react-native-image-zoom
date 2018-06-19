@@ -633,8 +633,8 @@ export default class ImageViewer extends React.Component<Props, State> {
   /**
    * 重置大小和位置
    */
-  public reset() {
-    this.scale = 1;
+  public reset(initialScale: number = 1) {
+    this.scale = initialScale;
     this.animatedScale.setValue(this.scale);
     this.positionX = 0;
     this.animatedPositionX.setValue(this.positionX);
