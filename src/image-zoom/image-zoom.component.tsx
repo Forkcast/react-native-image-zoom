@@ -83,6 +83,10 @@ export default class ImageViewer extends React.Component<Props, State> {
   // 是否在左右滑
   private isHorizontalWrap = false;
 
+  private lastCenterActive = false;
+  private lastCenterPointX = 0;
+  private lastCenterPointY = 0;
+
   public componentWillMount() {
     this.imagePanResponder = PanResponder.create({
       // 要求成为响应者：
@@ -100,6 +104,9 @@ export default class ImageViewer extends React.Component<Props, State> {
         this.isDoubleClick = false;
         this.isLongPress = false;
         this.isHorizontalWrap = false;
+        this.lastCenterActive = false;
+        this.lastCenterPointX = 0;
+        this.lastCenterPointY = 0;
 
         // 任何手势开始，都清空单击计时器
         if (this.singleClickTimeout) {
@@ -191,6 +198,7 @@ export default class ImageViewer extends React.Component<Props, State> {
       onPanResponderMove: (evt, gestureState) => {
         if (this.isDoubleClick) {
           // 有时双击会被当做位移，这里屏蔽掉
+          this.lastCenterActive = false;
           return;
         }
 
@@ -356,6 +364,7 @@ export default class ImageViewer extends React.Component<Props, State> {
               }
             }
           }
+          this.lastCenterActive = false;
         } else {
           // 多个手指的情况
           // 取消长按状态
@@ -422,17 +431,36 @@ export default class ImageViewer extends React.Component<Props, State> {
           }
 
           if (this.props.panToMove) {
-            // Move image based on the movement of the center of the gesture
-            this.positionX -= gestureState.dx / this.scale;
-            this.positionY -= gestureState.dy / this.scale;
-            this.animatedPositionX.setValue(this.positionX);
-            this.animatedPositionY.setValue(this.positionY);
+            if (this.lastCenterActive) {
+              // Move image based on the movement of the center of the gesture
+
+              const centerPointX =
+                evt.nativeEvent.changedTouches[0].pageX +
+                (evt.nativeEvent.changedTouches[1].pageX - evt.nativeEvent.changedTouches[0].pageX) / 2;
+              const centerPointY =
+                evt.nativeEvent.changedTouches[0].pageY +
+                (evt.nativeEvent.changedTouches[1].pageY - evt.nativeEvent.changedTouches[0].pageY) / 2;
+              this.positionX += (centerPointX - this.lastCenterPointX) / this.scale;
+              this.positionY += (centerPointY - this.lastCenterPointY) / this.scale;
+              this.animatedPositionX.setValue(this.positionX);
+              this.animatedPositionY.setValue(this.positionY);
+            }
+
+            this.lastCenterActive = true;
+            this.lastCenterPointX =
+              evt.nativeEvent.changedTouches[0].pageX +
+              (evt.nativeEvent.changedTouches[1].pageX - evt.nativeEvent.changedTouches[0].pageX) / 2;
+            this.lastCenterPointY =
+              evt.nativeEvent.changedTouches[0].pageY +
+              (evt.nativeEvent.changedTouches[1].pageY - evt.nativeEvent.changedTouches[0].pageY) / 2;
           }
         }
 
         this.imageDidMove('onPanResponderMove');
       },
       onPanResponderRelease: (evt, gestureState) => {
+        this.lastCenterActive = false;
+
         // 取消长按
         if (this.longPressTimeout) {
           clearTimeout(this.longPressTimeout);
