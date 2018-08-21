@@ -420,6 +420,14 @@ export default class ImageViewer extends React.Component<Props, State> {
             }
             this.zoomLastDistance = this.zoomCurrentDistance;
           }
+
+          if (this.props.panToMove) {
+            // Move image based on the movement of the center of the gesture
+            this.positionX -= gestureState.dx / this.scale;
+            this.positionY -= gestureState.dy / this.scale;
+            this.animatedPositionX.setValue(this.positionX);
+            this.animatedPositionY.setValue(this.positionY);
+          }
         }
 
         this.imageDidMove('onPanResponderMove');
