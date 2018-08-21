@@ -202,7 +202,7 @@ export default class ImageViewer extends React.Component<Props, State> {
           return;
         }
 
-        if (evt.nativeEvent.changedTouches.length <= 1) {
+        if (evt.nativeEvent.touches.length <= 1) {
           // x 位移
           let diffX = gestureState.dx - (this.lastPositionX || 0);
           if (this.lastPositionX === null) {
@@ -365,7 +365,12 @@ export default class ImageViewer extends React.Component<Props, State> {
             }
           }
           this.lastCenterActive = false;
-        } else {
+        } else if (evt.nativeEvent.touches.length >= 2) {
+          const touchOne =
+            evt.nativeEvent.changedTouches.length >= 2 ? evt.nativeEvent.changedTouches[0] : evt.nativeEvent.touches[0];
+          const touchTwo =
+            evt.nativeEvent.changedTouches.length >= 2 ? evt.nativeEvent.changedTouches[1] : evt.nativeEvent.touches[1];
+
           // 多个手指的情况
           // 取消长按状态
           if (this.longPressTimeout) {
@@ -376,22 +381,22 @@ export default class ImageViewer extends React.Component<Props, State> {
             // 找最小的 x 和最大的 x
             let minX: number;
             let maxX: number;
-            if (evt.nativeEvent.changedTouches[0].locationX > evt.nativeEvent.changedTouches[1].locationX) {
-              minX = evt.nativeEvent.changedTouches[1].pageX;
-              maxX = evt.nativeEvent.changedTouches[0].pageX;
+            if (touchOne.locationX > touchTwo.locationX) {
+              minX = touchTwo.pageX;
+              maxX = touchOne.pageX;
             } else {
-              minX = evt.nativeEvent.changedTouches[0].pageX;
-              maxX = evt.nativeEvent.changedTouches[1].pageX;
+              minX = touchOne.pageX;
+              maxX = touchTwo.pageX;
             }
 
             let minY: number;
             let maxY: number;
-            if (evt.nativeEvent.changedTouches[0].locationY > evt.nativeEvent.changedTouches[1].locationY) {
-              minY = evt.nativeEvent.changedTouches[1].pageY;
-              maxY = evt.nativeEvent.changedTouches[0].pageY;
+            if (touchOne.locationY > touchTwo.locationY) {
+              minY = touchTwo.pageY;
+              maxY = touchOne.pageY;
             } else {
-              minY = evt.nativeEvent.changedTouches[0].pageY;
-              maxY = evt.nativeEvent.changedTouches[1].pageY;
+              minY = touchOne.pageY;
+              maxY = touchTwo.pageY;
             }
 
             const widthDistance = maxX - minX;
@@ -434,12 +439,8 @@ export default class ImageViewer extends React.Component<Props, State> {
             if (this.lastCenterActive) {
               // Move image based on the movement of the center of the gesture
 
-              const centerPointX =
-                evt.nativeEvent.changedTouches[0].pageX +
-                (evt.nativeEvent.changedTouches[1].pageX - evt.nativeEvent.changedTouches[0].pageX) / 2;
-              const centerPointY =
-                evt.nativeEvent.changedTouches[0].pageY +
-                (evt.nativeEvent.changedTouches[1].pageY - evt.nativeEvent.changedTouches[0].pageY) / 2;
+              const centerPointX = touchOne.pageX + (touchTwo.pageX - touchOne.pageX) / 2;
+              const centerPointY = touchOne.pageY + (touchTwo.pageY - touchOne.pageY) / 2;
               this.positionX += (centerPointX - this.lastCenterPointX) / this.scale;
               this.positionY += (centerPointY - this.lastCenterPointY) / this.scale;
               this.animatedPositionX.setValue(this.positionX);
@@ -447,12 +448,8 @@ export default class ImageViewer extends React.Component<Props, State> {
             }
 
             this.lastCenterActive = true;
-            this.lastCenterPointX =
-              evt.nativeEvent.changedTouches[0].pageX +
-              (evt.nativeEvent.changedTouches[1].pageX - evt.nativeEvent.changedTouches[0].pageX) / 2;
-            this.lastCenterPointY =
-              evt.nativeEvent.changedTouches[0].pageY +
-              (evt.nativeEvent.changedTouches[1].pageY - evt.nativeEvent.changedTouches[0].pageY) / 2;
+            this.lastCenterPointX = touchOne.pageX + (touchTwo.pageX - touchOne.pageX) / 2;
+            this.lastCenterPointY = touchOne.pageY + (touchTwo.pageY - touchOne.pageY) / 2;
           }
         }
 
